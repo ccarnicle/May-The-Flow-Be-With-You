@@ -69,6 +69,32 @@ access(all) contract OnchainCraps {
     receiverRef.deposit(from: <- winVault)
   }
 
+  access (all) struct GameData {
+    access(all) let id: UInt64
+    access(all) let state: String
+    access(all) let point: Int?
+    access(all) let owner: Address?
+    access(all) let betsSummary: {String : UFix64}
+
+    init(id: UInt64, state: String, point: Int?, owner: Address?, betsSummary: {String:UFix64}) {
+        self.id = id
+        self.state = state
+        self.point = point
+        self.owner = owner
+        self.betsSummary = betsSummary
+    }
+  }
+
+  access (all)
+  fun gameStateToString(state: OnchainCraps.GameState): String {
+    switch state {
+        case OnchainCraps.GameState.COMEOUT: return "COMEOUT"
+        case OnchainCraps.GameState.POINT: return "POINT"
+        case OnchainCraps.GameState.RESOLVED: return "RESOLVED"
+        default: return "UNKNOWN"
+    }
+  }
+
   access (all) resource Game {
     access(all) var state: OnchainCraps.GameState
     access(all) var point: Int? 
@@ -83,6 +109,29 @@ access(all) contract OnchainCraps {
     access(all) fun getOwnerAddress(): Address? {
       return self.owner?.address
     }
+
+    access(all) fun getGameInfo() : OnchainCraps.GameData {
+      let betsSummary: {String: UFix64} = {}
+
+      for key in self.bets.keys {
+          let tempVault <- self.bets.remove(key: key)!
+          let balance = tempVault.balance
+          betsSummary[key] = balance
+          self.bets[key] <-! tempVault
+      } 
+
+      // If GameState is an enum, convert to string
+      let stateString = OnchainCraps.gameStateToString(state: self.state) // or use a custom mapping if needed
+
+      return GameData(
+          id: self.id,
+          state: stateString,
+          point: self.point,
+          owner: self.getOwnerAddress(),
+          betsSummary: betsSummary
+      )
+
+    } 
 
     access (contract) fun fieldBet(diceTotal: UInt8, betAmount: @{FungibleToken.Vault}) : OnchainCraps.BetResult {
 
@@ -372,7 +421,7 @@ access(all) contract OnchainCraps {
     // Set the named paths
     self.CrapsAdminStoragePath = /storage/CrapsAdmin
     self.GameStoragePath = /storage/OnchainCraps
-    self.tokenVault <- aiSportsJuice.createEmptyVault(vaultType: aiSportsJuice.getType())
+    self.tokenVault <- aiSportsJuice.createEmptyVault(vaultType: Type<@aiSportsJuice.Vault>())
     self.tokenPath = PublicPath(identifier: "aiSportsJuiceReceiver")!
 
     self.account.storage.save(<-create CrapsAdmin(), to: self.CrapsAdminStoragePath)

@@ -17,7 +17,7 @@ transaction() {
 
     execute {
 
-      let result = self.crapsGameRef?.rollDice(userAddress: self.accountAddress, newBets: nil ) ?? panic("cannot access onchain dice resource")
+      let result = self.crapsGameRef?.rollDice(newBets: <- {} ) ?? panic("cannot access onchain dice resource")
       log(result)
 
     }
