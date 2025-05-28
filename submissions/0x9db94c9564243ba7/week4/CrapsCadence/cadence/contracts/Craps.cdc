@@ -85,8 +85,7 @@ access(all) contract OnchainCraps {
     }
   }
 
-  access (all)
-  fun gameStateToString(state: OnchainCraps.GameState): String {
+  access (all) fun gameStateToString(state: OnchainCraps.GameState): String {
     switch state {
         case OnchainCraps.GameState.COMEOUT: return "COMEOUT"
         case OnchainCraps.GameState.POINT: return "POINT"
@@ -114,10 +113,8 @@ access(all) contract OnchainCraps {
       let betsSummary: {String: UFix64} = {}
 
       for key in self.bets.keys {
-          let tempVault <- self.bets.remove(key: key)!
-          let balance = tempVault.balance
-          betsSummary[key] = balance
-          self.bets[key] <-! tempVault
+          let selfBetsRef = &self.bets as &{String: {FungibleToken.Vault}}
+          betsSummary[key] = selfBetsRef[key]!.balance
       } 
 
       // If GameState is an enum, convert to string
@@ -130,7 +127,6 @@ access(all) contract OnchainCraps {
           owner: self.getOwnerAddress(),
           betsSummary: betsSummary
       )
-
     } 
 
     access (contract) fun fieldBet(diceTotal: UInt8, betAmount: @{FungibleToken.Vault}) : OnchainCraps.BetResult {
