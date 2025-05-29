@@ -83,6 +83,10 @@
 				"type": "file",
 				"location": "emulator-account.pkey"
 			}
+		},
+		"emulator-account-1": {
+			"address": "045a1763c93006ca",
+			"key": "3f7bddb13fb0c996e2b2c36e983acc794413dbdb75a6edcea39dd5880681c8c8"
 		}
 	},
 	"deployments": {
