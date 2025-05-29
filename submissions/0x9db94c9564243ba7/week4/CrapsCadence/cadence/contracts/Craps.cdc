@@ -11,13 +11,10 @@ access(all) contract OnchainCraps {
   access(all) let allowedBets: {OnchainCraps.GameState : [String]}
 
   //an dictionary of fungible token vaults to hold multiple tokens.
-  //access(all) var tokenVaults: @{String : {FungibleToken.Vault}} //PROBABLY NOT NEEDED FOR V1
   access(all) var nextGameId: UInt64
 
   access(all) var tokenVault: @{FungibleToken.Vault}
   access(all) var tokenPath: PublicPath
-
-  //tbd implement: access (all) let userInfo: { Address : String } - probably best to store in Game
 
   access(all) enum GameState: UInt8 {
     access(all) case COMEOUT /// COMEOUT Bets
@@ -101,13 +98,8 @@ access(all) contract OnchainCraps {
   access (all) resource Game {
     access(all) var state: OnchainCraps.GameState
     access(all) var point: Int? 
-    //access(all) var pointAmount: UFix64?
-    //access(all) var come: Int?
     access(all) var bets: @{ String : {FungibleToken.Vault} }
     access(all) let id: UInt64
-    //access(all) var gameVault: @{FungibleToken.Vault}
-
-    //add overall userInfo here instead of above
 
     access(all) fun getOwnerAddress(): Address? {
       return self.owner?.address
@@ -345,7 +337,6 @@ access(all) contract OnchainCraps {
               }
 
               // SEND selfBetsRef[bet]!.balance as the betAmount to sendPayoutToUser
-
               rollResult.append(OnchainCraps.BetResult(bet: bet, betAmount: betAmount, status: betStatus, resultAmount: resultAmount )) //TODO - we should't return until the end
               //send the resultAmount to the user - payment todo
               OnchainCraps.sendPayoutToUser(userAddress: self.getOwnerAddress(), sendAmount: <- self.bets.remove(key: bet)!, resultAmount: resultAmount!)
@@ -418,7 +409,6 @@ access(all) contract OnchainCraps {
       OnchainCraps.GameState.POINT:["FIELD", "CRAPS", "YO", "4", "5", "6", "8", "9", "10", "ODDS"] //to add: COME
     }
     self.userGames = {}
-    //self.tokenVaults <- {} //add aiSportsJuice
 
     self.nextGameId = 1
 

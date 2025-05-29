@@ -77,6 +77,20 @@
 		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
+		"craps-testnet": {
+			"address": "2a0f8698a713c169",
+			"key": {
+				"type": "file",
+				"location": "craps-testnet.pkey"
+			}
+		},
+		"craps_player": {
+			"address": "3c5be3ab3e17cb08",
+			"key": {
+				"type": "file",
+				"location": "craps_player.pkey"
+			}
+		},
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": {
@@ -93,6 +107,11 @@
 		"emulator": {
 			"emulator-account": [
 				"aiSportsJuice",
+				"OnchainCraps"
+			]
+		},
+		"testnet": {
+			"craps-testnet": [
 				"OnchainCraps"
 			]
 		}
