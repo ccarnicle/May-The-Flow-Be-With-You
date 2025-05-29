@@ -1,14 +1,13 @@
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { useCurrentFlowUser } from "@onflow/kit";
+import { AppBar, Toolbar, Typography, Button, styled } from '@mui/material';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: '#0a0a0a',
-  borderBottom: `2px solid ${theme.palette.secondary.main}`,
-  boxShadow: `0 0 10px ${theme.palette.secondary.main}`,
-  height: '64px',
+  borderBottom: '2px solid #ff00ff',
+  boxShadow: '0 0 20px #ff00ff',
   width: '480px',
   margin: '0 auto',
-  borderRadius: '12px',
+  borderRadius: '4px',
   [theme.breakpoints.down('md')]: {
     width: '100%',
     maxWidth: '480px',
@@ -17,28 +16,48 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
 
 const StyledTypography = styled(Typography)(({ theme }) => ({
   fontFamily: 'Orbitron, sans-serif',
-  color: '#ffffff',
+  color: '#00ffff',
   flexGrow: 1,
 }));
 
 const WalletButton = styled(Button)(({ theme }) => ({
-  fontFamily: 'JetBrains Mono, monospace',
-  color: '#ffffff',
+  fontFamily: 'Inter, sans-serif',
+  borderColor: '#ff00ff',
+  color: '#ff00ff',
   '&:hover': {
-    backgroundColor: theme.palette.primary.dark,
-    boxShadow: `0 0 10px ${theme.palette.primary.main}`,
+    borderColor: '#00ffff',
+    color: '#00ffff',
   },
 }));
 
 const NavBar = () => {
+  const { user, authenticate, unauthenticate } = useCurrentFlowUser();
+
+  const handleWalletClick = () => {
+    if (user.loggedIn) {
+      unauthenticate();
+    } else {
+      authenticate();
+    }
+  };
+
+  const formatAddress = (address: string | undefined) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
   return (
     <StyledAppBar position="static">
       <Toolbar>
         <StyledTypography variant="h6">
           Onchain Dice
         </StyledTypography>
-        <WalletButton color = "primary" variant="outlined">
-          Connect Wallet
+        <WalletButton 
+          color="primary" 
+          variant="outlined"
+          onClick={handleWalletClick}
+        >
+          {user.loggedIn ? formatAddress(user.addr) : 'Connect Wallet'}
         </WalletButton>
       </Toolbar>
     </StyledAppBar>
