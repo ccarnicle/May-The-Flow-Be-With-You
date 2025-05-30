@@ -1,5 +1,5 @@
 import { useCurrentFlowUser } from "@onflow/kit";
-import { AppBar, Toolbar, Typography, Button, styled } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, styled, Tooltip } from '@mui/material';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: '#0a0a0a',
@@ -52,13 +52,25 @@ const NavBar = () => {
         <StyledTypography variant="h6">
           Onchain Dice
         </StyledTypography>
-        <WalletButton 
-          color="primary" 
-          variant="outlined"
-          onClick={handleWalletClick}
-        >
-          {user.loggedIn ? formatAddress(user.addr) : 'Connect Wallet'}
-        </WalletButton>
+        {user.loggedIn ? (
+          <Tooltip title="Log Out" placement="bottom">
+            <WalletButton 
+              color="primary" 
+              variant="outlined"
+              onClick={handleWalletClick}
+            >
+              {formatAddress(user.addr)}
+            </WalletButton>
+          </Tooltip>
+        ) : (
+          <WalletButton 
+            color="primary" 
+            variant="outlined"
+            onClick={handleWalletClick}
+          >
+            Connect Wallet
+          </WalletButton>
+        )}
       </Toolbar>
     </StyledAppBar>
   );
