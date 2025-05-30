@@ -35,11 +35,11 @@ A simple dice game built with Phaser 3 and integrated with Flow blockchain for t
 - [x] Add score display
 - [ ] Create game instructions
 - [ ] Implement game over screen
-- [ ] Develop responsive web layout to house the game (using v0.dev for cyberpunk-themed UI)
+- [x] Develop responsive web layout to house the game (using v0.dev for cyberpunk-themed UI)
 
 ### Phase 3: Flow Blockchain Integration (2-3 days)
 #### Smart Contract
-- [ ] Create smart contract for:
+- [x] Create smart contract for:
   - Game results storage
   - Player score management
   - Game state handling
@@ -57,11 +57,11 @@ A simple dice game built with Phaser 3 and integrated with Flow blockchain for t
 
 ### Phase 4: Wallet Integration (1-2 days)
 #### Authentication
-- [ ] Set up Flow wallet authentication using @onflow/kit
-- [ ] Create React context for wallet state management
-- [ ] Implement wallet connection UI
-- [ ] Add wallet status display
-- [ ] Handle wallet disconnection
+- [x] Set up Flow wallet authentication using @onflow/kit
+- [x] Create React context for wallet state management
+- [x] Implement wallet connection UI
+- [x] Add wallet status display
+- [x] Handle wallet disconnection
 
 #### User Experience
 - [ ] Add loading states for wallet operations

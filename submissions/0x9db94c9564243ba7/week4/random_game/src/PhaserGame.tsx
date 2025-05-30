@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import StartGame from './game/main';
 import { EventBus } from './game/EventBus';
 import { DiceGame } from './game/components/DiceGame';
-import { DiceGameScene } from './game/scenes/DiceGameScene';
+//import { DiceGameScene } from './game/scenes/DiceGameScene';
 
 export interface IRefPhaserGame
 {
