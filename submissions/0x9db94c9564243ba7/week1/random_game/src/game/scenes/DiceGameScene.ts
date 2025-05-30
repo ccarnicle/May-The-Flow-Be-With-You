@@ -7,6 +7,7 @@ export class DiceGameScene extends Phaser.Scene {
     private rollButton: Phaser.GameObjects.Text;
     private scoreText: Phaser.GameObjects.Text;
     private resultsText: Phaser.GameObjects.Text;
+    private resultsHeaderText: Phaser.GameObjects.Text;
     private isRolling: boolean = false;
     private dice1Value: number = 1;
     private dice2Value: number = 1;
@@ -84,6 +85,17 @@ export class DiceGameScene extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
 
+        // Create results header text with responsive positioning
+        const headerY = this.isMobile ? this.scale.height / 2 + 200 : 580;
+        this.resultsHeaderText = this.add.text(this.scale.width / 2, headerY, '', {
+            fontSize: '24px',
+            color: '#ffffff',
+            align: 'left',
+            wordWrap: { width: this.scale.width - 100 },
+            fixedWidth: this.scale.width - 100,
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
         // Create results text area with responsive positioning
         const resultsY = this.isMobile ? this.scale.height / 2 + 240 : 620;
         this.resultsText = this.add.text(this.scale.width / 2, resultsY, '', {
@@ -139,6 +151,11 @@ export class DiceGameScene extends Phaser.Scene {
         const scoreY = this.isMobile ? height / 2 + 170 : 550;
         this.scoreText.setPosition(width / 2, scoreY);
         this.scoreText.setFontSize(32);
+
+        // Update results header text position
+        const headerY = this.isMobile ? height / 2 + 200 : 580;
+        this.resultsHeaderText.setPosition(width / 2, headerY);
+        this.resultsHeaderText.setWordWrapWidth(width - 100);
 
         // Update results text position
         const resultsY = this.isMobile ? height / 2 + 240 : 620;
@@ -223,15 +240,17 @@ export class DiceGameScene extends Phaser.Scene {
 
     // Helper method to update results text
     updateResultsText(rollResults: { bet: string; betAmount: string; resultAmount: string; status: string; }[]) {
-        if (!this.resultsText) return;
+        if (!this.resultsText || !this.resultsHeaderText) return;
         
         if (!rollResults || rollResults.length === 0) {
+            this.resultsHeaderText.setText('');
             this.resultsText.setText('');
             return;
         }
 
         // Create header
         const header = 'Bet'.padStart(10) + 'Status'.padStart(10) + 'Amount'.padStart(10);
+        this.resultsHeaderText.setText(header);
         
         // Create rows
         const rows = rollResults.map(result => {
@@ -240,8 +259,7 @@ export class DiceGameScene extends Phaser.Scene {
             return `${betAmount.padStart(10)}${result.status.padStart(10)}${winAmount.padStart(10)}`;
         });
 
-        // Combine header and rows
-        const tableText = [header, ...rows].join('\n');
-        this.resultsText.setText(tableText);
+        // Set only the rows in the results text
+        this.resultsText.setText(rows.join('\n'));
     }
 } 
