@@ -13,6 +13,8 @@ access(all) contract OnchainCraps {
   //an dictionary of fungible token vaults to hold multiple tokens.
   access(all) var nextGameId: UInt64
 
+  access(all) event RollCompleted(result: RollResult)
+
   access(all) var tokenVault: @{FungibleToken.Vault}
   access(all) var tokenPath: PublicPath
 
@@ -235,7 +237,9 @@ access(all) contract OnchainCraps {
       destroy newBets 
 
       if self.bets.length == 0 { //If there are only prop bets then we can return
-        return OnchainCraps.RollResult(value: diceTotal,  dice1: firstRoll, dice2: secondRoll, rollResults: rollResult)
+        let returnResult = OnchainCraps.RollResult(value: diceTotal,  dice1: firstRoll, dice2: secondRoll, rollResults: rollResult)
+        emit RollCompleted(result: returnResult)
+        return returnResult
       }
 
       let selfBetsRef = &self.bets as &{String: {FungibleToken.Vault}}
@@ -368,7 +372,10 @@ access(all) contract OnchainCraps {
           self.point = nil
         }
       }
-      return OnchainCraps.RollResult(value: diceTotal,  dice1: firstRoll, dice2: secondRoll, rollResults: rollResult)
+
+      let returnResult = OnchainCraps.RollResult(value: diceTotal,  dice1: firstRoll, dice2: secondRoll, rollResults: rollResult)
+      emit RollCompleted(result: returnResult)
+      return returnResult
     }
 
     init() {

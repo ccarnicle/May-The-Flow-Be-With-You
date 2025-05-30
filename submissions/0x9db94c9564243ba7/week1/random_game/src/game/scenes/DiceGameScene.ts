@@ -6,11 +6,13 @@ export class DiceGameScene extends Phaser.Scene {
     private dice2: Phaser.GameObjects.Sprite;
     private rollButton: Phaser.GameObjects.Text;
     private scoreText: Phaser.GameObjects.Text;
+    private resultsText: Phaser.GameObjects.Text;
     private isRolling: boolean = false;
     private dice1Value: number = 1;
     private dice2Value: number = 1;
     private background: Phaser.GameObjects.Image;
     private isMobile: boolean = false;
+    private rollAnimation: Phaser.Time.TimerEvent | null = null;
     
     constructor() {
         super({ key: 'DiceGameScene' });
@@ -82,6 +84,16 @@ export class DiceGameScene extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
 
+        // Create results text area with responsive positioning
+        const resultsY = this.isMobile ? this.scale.height / 2 + 240 : 620;
+        this.resultsText = this.add.text(this.scale.width / 2, resultsY, '', {
+            fontSize: '24px',
+            color: '#ffffff',
+            align: 'left',
+            wordWrap: { width: this.scale.width - 100 },
+            fixedWidth: this.scale.width - 100
+        }).setOrigin(0.5);
+
         // Add resize handler to adjust layout when the screen size changes
         this.scale.on('resize', this.resize, this);
 
@@ -127,6 +139,11 @@ export class DiceGameScene extends Phaser.Scene {
         const scoreY = this.isMobile ? height / 2 + 170 : 550;
         this.scoreText.setPosition(width / 2, scoreY);
         this.scoreText.setFontSize(32);
+
+        // Update results text position
+        const resultsY = this.isMobile ? height / 2 + 240 : 620;
+        this.resultsText.setPosition(width / 2, resultsY);
+        this.resultsText.setWordWrapWidth(width - 100);
     }
     
     update() {
@@ -136,8 +153,34 @@ export class DiceGameScene extends Phaser.Scene {
     // Helper method to update score text (used by React component)
     updateScoreText(text: string) {
         if (this.scoreText) {
-            this.scoreText.setText(text);
+            // Only show the text if it's not a transaction ID
+            if (!text.includes('Transaction confirmed! ID:')) {
+                this.scoreText.setText(text);
+            } else {
+                this.scoreText.setText('Transaction confirmed!');
+            }
         }
+    }
+
+    // New method to stop rolling animation with final dice values
+    stopRollingAnimation(dice1Value: number, dice2Value: number) {
+        if (this.rollAnimation) {
+            this.rollAnimation.remove();
+            this.rollAnimation = null;
+        }
+        
+        this.isRolling = false;
+        this.rollButton.setStyle({ backgroundColor: '#000000' });
+        
+        // Set final dice values
+        this.dice1.setFrame(dice1Value - 1);
+        this.dice2.setFrame(dice2Value - 1);
+        
+        // Reset dice position and rotation
+        this.dice1.angle = 0;
+        this.dice2.angle = 0;
+        this.dice1.y = this.isMobile ? this.scale.height / 2 - 50 : 300;
+        this.dice2.y = this.isMobile ? this.scale.height / 2 - 50 : 300;
     }
 
     private rollDice() {
@@ -147,13 +190,10 @@ export class DiceGameScene extends Phaser.Scene {
         this.isRolling = true;
         this.rollButton.setStyle({ backgroundColor: '#666666' });
         
-        // Create a timer for 3 seconds of rolling
-        const rollDuration = 3000; // 3 seconds
         const rollInterval = 100; // Update every 100ms
-        const startTime = Date.now();
         
         // Create the rolling animation
-        const rollAnimation = this.time.addEvent({
+        this.rollAnimation = this.time.addEvent({
             delay: rollInterval,
             callback: () => {
                 // Generate random numbers between 1 and 6 for visual effect
@@ -171,26 +211,37 @@ export class DiceGameScene extends Phaser.Scene {
                 // Add some bounce effect
                 this.dice1.y = (this.isMobile ? this.scale.height / 2 - 50 : 300) + Math.sin(Date.now() / 100) * 10;
                 this.dice2.y = (this.isMobile ? this.scale.height / 2 - 50 : 300) + Math.sin(Date.now() / 100 + Math.PI) * 10;
-                
-                // Check if we should stop rolling
-                if (Date.now() - startTime >= rollDuration) {
-                    rollAnimation.remove();
-                    this.isRolling = false;
-                    this.rollButton.setStyle({ backgroundColor: '#000000' });
-                    
-                    // Reset dice position and rotation
-                    this.dice1.angle = 0;
-                    this.dice2.angle = 0;
-                    this.dice1.y = this.isMobile ? this.scale.height / 2 - 50 : 300;
-                    this.dice2.y = this.isMobile ? this.scale.height / 2 - 50 : 300;
-                    
-                    // Emit a custom event that the roll is complete
-                    console.log('Emitting diceRollComplete event');
-                    this.events.emit('diceRollComplete');
-                }
             },
             callbackScope: this,
             loop: true
         });
+        
+        // Emit a custom event that the roll is complete
+        console.log('Emitting diceRollComplete event');
+        this.events.emit('diceRollComplete');
+    }
+
+    // Helper method to update results text
+    updateResultsText(rollResults: { bet: string; betAmount: string; resultAmount: string; status: string; }[]) {
+        if (!this.resultsText) return;
+        
+        if (!rollResults || rollResults.length === 0) {
+            this.resultsText.setText('');
+            return;
+        }
+
+        // Create header
+        const header = 'Bet'.padStart(10) + 'Status'.padStart(10) + 'Amount'.padStart(10);
+        
+        // Create rows
+        const rows = rollResults.map(result => {
+            const betAmount = parseFloat(result.betAmount).toFixed(2);
+            const winAmount = parseFloat(result.resultAmount).toFixed(2);
+            return `${betAmount.padStart(10)}${result.status.padStart(10)}${winAmount.padStart(10)}`;
+        });
+
+        // Combine header and rows
+        const tableText = [header, ...rows].join('\n');
+        this.resultsText.setText(tableText);
     }
 } 

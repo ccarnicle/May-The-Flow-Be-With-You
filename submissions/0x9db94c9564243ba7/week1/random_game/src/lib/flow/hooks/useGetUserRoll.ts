@@ -5,7 +5,6 @@ export const getUserRollData = async (address: string) => {
   try {
     // Ensure address is properly formatted
     const formattedAddress = address?.startsWith('0x') ? address : `0x${address}`;
-    console.log("calling get user roll with formatted address: ", formattedAddress);
     
     const result = await fcl.query({
       cadence: getUserRoll,
@@ -14,8 +13,6 @@ export const getUserRollData = async (address: string) => {
       ],
     });
 
-
-    console.log("query result: ", result)
     return {
       data: result,
       error: null,

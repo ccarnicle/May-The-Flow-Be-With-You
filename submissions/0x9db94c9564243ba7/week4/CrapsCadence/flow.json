@@ -3,7 +3,7 @@
 		"OnchainCraps": {
 			"source": "cadence/contracts/Craps.cdc",
 			"aliases": {
-				"testing": "0000000000000007"
+				"testnet": "2a0f8698a713c169"
 			}
 		},
 		"aiSportsJuice": {
