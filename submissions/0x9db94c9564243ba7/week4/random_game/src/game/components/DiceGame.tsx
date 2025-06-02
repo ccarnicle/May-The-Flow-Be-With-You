@@ -83,6 +83,13 @@ export const DiceGame: React.FC<DiceGameProps> = ({ scene }) => {
     }
   }, [userAddress, rollResultData]);
 
+  // Update scene with game state
+  useEffect(() => {
+    if (scene && gameData) {
+      scene.updateBettingButtons(gameData.state);
+    }
+  }, [scene, gameData]);
+
   useEffect(() => {
     console.log('DiceGame Effect:', { 
       sceneKey: scene?.scene?.key,
@@ -125,7 +132,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({ scene }) => {
         setRollError(null);
         try {
           const result = await rollDice({
-            odds: "FIELD",
+            odds: scene.selectedBet || "FIELD",
             amount: "10.0"
           });
           setTxId(result.txId);

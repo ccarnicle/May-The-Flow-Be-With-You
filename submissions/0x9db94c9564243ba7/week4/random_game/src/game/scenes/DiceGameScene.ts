@@ -14,6 +14,9 @@ export class DiceGameScene extends Phaser.Scene {
     private background: Phaser.GameObjects.Image;
     private isMobile: boolean = false;
     private rollAnimation: Phaser.Time.TimerEvent | null = null;
+    private betButtons: Phaser.GameObjects.Text[] = [];
+    private selectedBet: string = "FIELD";
+    private stateText: Phaser.GameObjects.Text;
     
     constructor() {
         super({ key: 'DiceGameScene' });
@@ -42,6 +45,13 @@ export class DiceGameScene extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
 
+        // Add state text under the title
+        const stateY = this.isMobile ? 190 : 240;
+        this.stateText = this.add.text(this.scale.width / 2, stateY, 'State: COMEOUT', {
+            fontSize: '24px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
         // Add back button
         const backButton = this.add.text(50, 50, '← Back', {
             fontSize: '24px',
@@ -52,16 +62,17 @@ export class DiceGameScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('MainMenu'));
 
-        // Calculate dice positioning based on screen size
+        // Calculate dice positioning based on screen size - moved to left side
         const diceScale = this.isMobile ? 0.3 : 0.45;
         const diceY = this.isMobile ? this.scale.height / 2 - 50 : 300;
         const diceGap = this.isMobile ? 100 : 150;
+        const diceX = this.isMobile ? this.scale.width / 3 : this.scale.width / 3;
         
         // Create two dice sprites side by side
-        this.dice1 = this.add.sprite(this.scale.width / 2 - diceGap / 2, diceY, 'dice', 0)
+        this.dice1 = this.add.sprite(diceX - diceGap / 2, diceY, 'dice', 0)
             .setScale(diceScale);
             
-        this.dice2 = this.add.sprite(this.scale.width / 2 + diceGap / 2, diceY, 'dice', 0)
+        this.dice2 = this.add.sprite(diceX + diceGap / 2, diceY, 'dice', 0)
             .setScale(diceScale);
 
         // Create roll button with responsive positioning
@@ -86,7 +97,7 @@ export class DiceGameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Create results header text with responsive positioning
-        const headerY = this.isMobile ? this.scale.height / 2 + 200 : 580;
+        const headerY = this.isMobile ? this.scale.height / 2 + 220 : 600;
         this.resultsHeaderText = this.add.text(this.scale.width / 2, headerY, '', {
             fontSize: '24px',
             color: '#ffffff',
@@ -97,7 +108,7 @@ export class DiceGameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Create results text area with responsive positioning
-        const resultsY = this.isMobile ? this.scale.height / 2 + 240 : 620;
+        const resultsY = this.isMobile ? this.scale.height / 2 + 260 : 640;
         this.resultsText = this.add.text(this.scale.width / 2, resultsY, '', {
             fontSize: '24px',
             color: '#ffffff',
@@ -130,16 +141,23 @@ export class DiceGameScene extends Phaser.Scene {
             title.setPosition(width / 2, this.isMobile ? 150 : 200);
             title.setFontSize(this.isMobile ? 24 : 32);
         }
+
+        // Update state text
+        if (this.stateText) {
+            this.stateText.setPosition(width / 2, this.isMobile ? 190 : 240);
+            this.stateText.setFontSize(this.isMobile ? 20 : 24);
+        }
         
         // Update dice positions
         const diceScale = this.isMobile ? 0.3 : 0.45;
         const diceY = this.isMobile ? height / 2 - 50 : 300;
         const diceGap = this.isMobile ? 100 : 150;
+        const diceX = this.isMobile ? width / 3 : width / 3;
         
-        this.dice1.setPosition(width / 2 - diceGap / 2, diceY);
+        this.dice1.setPosition(diceX - diceGap / 2, diceY);
         this.dice1.setScale(diceScale);
         
-        this.dice2.setPosition(width / 2 + diceGap / 2, diceY);
+        this.dice2.setPosition(diceX + diceGap / 2, diceY);
         this.dice2.setScale(diceScale);
         
         // Update button position
@@ -153,14 +171,18 @@ export class DiceGameScene extends Phaser.Scene {
         this.scoreText.setFontSize(32);
 
         // Update results header text position
-        const headerY = this.isMobile ? height / 2 + 200 : 580;
+        const headerY = this.isMobile ? height / 2 + 220 : 600;
         this.resultsHeaderText.setPosition(width / 2, headerY);
         this.resultsHeaderText.setWordWrapWidth(width - 100);
 
         // Update results text position
-        const resultsY = this.isMobile ? height / 2 + 240 : 620;
+        const resultsY = this.isMobile ? height / 2 + 260 : 640;
         this.resultsText.setPosition(width / 2, resultsY);
         this.resultsText.setWordWrapWidth(width - 100);
+
+        // Update betting buttons
+        const gameState = (this as any).gameData?.state || "COMEOUT";
+        this.updateBettingButtons(gameState);
     }
     
     update() {
@@ -252,14 +274,89 @@ export class DiceGameScene extends Phaser.Scene {
         const header = 'Bet'.padStart(10) + 'Status'.padStart(10) + 'Amount'.padStart(10);
         this.resultsHeaderText.setText(header);
         
-        // Create rows
-        const rows = rollResults.map(result => {
-            const betAmount = parseFloat(result.betAmount).toFixed(2);
-            const winAmount = parseFloat(result.resultAmount).toFixed(2);
-            return `${betAmount.padStart(10)}${result.status.padStart(10)}${winAmount.padStart(10)}`;
-        });
+        // Create rows, filtering out results with no amount
+        const rows = rollResults
+            .filter(result => result.resultAmount !== "nil")
+            .map(result => {
+                const betType = result.bet.padStart(10);
+                const status = result.status.padStart(10);
+                const winAmount = parseFloat(result.resultAmount).toFixed(2).padStart(10);
+                return `${betType}${status}${winAmount}`;
+            });
 
         // Set only the rows in the results text
         this.resultsText.setText(rows.join('\n'));
+    }
+
+    // New method to update betting buttons based on game state
+    updateBettingButtons(gameState: string) {
+        // Clear existing buttons
+        this.betButtons.forEach(button => button.destroy());
+        this.betButtons = [];
+
+        // Update state text
+        if (this.stateText) {
+            this.stateText.setText(`State: ${gameState}`);
+        }
+
+        const buttonX = this.isMobile ? this.scale.width * 0.8 : this.scale.width * 0.8; // Moved further right
+        const buttonY = this.isMobile ? 250 : 300;
+        const buttonSpacing = this.isMobile ? 60 : 80;
+        const horizontalSpacing = this.isMobile ? 60 : 80; // Reduced from 100/120 to 60/80
+
+        let buttons: string[] = [];
+        if (gameState === "POINT") {
+            buttons = ["FIELD", "YO", "6", "5", "8", "9", "4", "10"];
+            
+            // Create four rows of two buttons
+            buttons.forEach((bet, index) => {
+                const row = Math.floor(index / 2);
+                const col = index % 2;
+                const x = buttonX + (col === 1 ? horizontalSpacing : -horizontalSpacing);
+                const y = buttonY + (row * buttonSpacing);
+
+                const button = this.add.text(x, y, bet, {
+                    fontSize: '24px',
+                    color: '#ffffff',
+                    backgroundColor: bet === this.selectedBet ? '#333333' : '#000000',
+                    padding: { x: 15, y: 8 }
+                })
+                .setOrigin(0.5)
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => {
+                    this.selectedBet = bet;
+                    this.updateBettingButtons(gameState);
+                })
+                .on('pointerover', () => button.setStyle({ backgroundColor: '#333333' }))
+                .on('pointerout', () => button.setStyle({ 
+                    backgroundColor: bet === this.selectedBet ? '#333333' : '#000000' 
+                }));
+
+                this.betButtons.push(button);
+            });
+        } else {
+            // Default to COMEOUT state - keep vertical layout
+            buttons = ["PASS", "FIELD"];
+            buttons.forEach((bet, index) => {
+                const button = this.add.text(buttonX, buttonY + (index * buttonSpacing), bet, {
+                    fontSize: '24px',
+                    color: '#ffffff',
+                    backgroundColor: bet === this.selectedBet ? '#333333' : '#000000',
+                    padding: { x: 15, y: 8 }
+                })
+                .setOrigin(0.5)
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => {
+                    this.selectedBet = bet;
+                    this.updateBettingButtons(gameState);
+                })
+                .on('pointerover', () => button.setStyle({ backgroundColor: '#333333' }))
+                .on('pointerout', () => button.setStyle({ 
+                    backgroundColor: bet === this.selectedBet ? '#333333' : '#000000' 
+                }));
+
+                this.betButtons.push(button);
+            });
+        }
     }
 } 
